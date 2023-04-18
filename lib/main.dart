@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'dart:isolate';
+
 import 'package:example/person.dart';
 import 'package:example/person_json.dart';
 import 'package:example/propose_contract_json.dart';
@@ -34,6 +37,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int withoutIsolate = 0;
+  int withCompute = 0;
   int withIsolate = 0;
   bool isLoading = false;
 
@@ -56,7 +60,7 @@ class _MyHomePageState extends State<MyHomePage> {
       });
     }
 
-    Future<void> getLoadTimeWithIsolate() async {
+    Future<void> getLoadTimeWithCompute() async {
       final stopwatch = Stopwatch()..start();
       setState(() {
         isLoading = true;
@@ -66,6 +70,23 @@ class _MyHomePageState extends State<MyHomePage> {
         print(i);
       }
       stopwatch.stop();
+      setState(() {
+        isLoading = false;
+        withCompute = stopwatch.elapsedMilliseconds;
+      });
+    }
+
+    void getLoadTimeWithIsolate() {
+      final stopwatch = Stopwatch()..start();
+      setState(() {
+        isLoading = true;
+      });
+      for (var i = 0; i < 10; i++) {
+        Isolate.spawn(ProposalOpenContract.fromJson, proposeContractJson);
+        print(i);
+      }
+      stopwatch.stop();
+
       setState(() {
         isLoading = false;
         withIsolate = stopwatch.elapsedMilliseconds;
@@ -91,6 +112,18 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
                 const SizedBox(width: 20),
                 Text('$withoutIsolate ms'),
+              ],
+            ),
+            Row(
+              children: [
+                TextButton(
+                  onPressed: () {
+                    getLoadTimeWithCompute();
+                  },
+                  child: const Text('Get Time To Load With Compute'),
+                ),
+                const SizedBox(width: 20),
+                Text('$withCompute ms'),
               ],
             ),
             Row(
